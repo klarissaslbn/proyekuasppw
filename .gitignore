@@ -1,0 +1,12 @@
+# Mengabaikan file konfigurasi database berisi password rahasia
+config.php
+includes/config.php
+
+# Mengabaikan folder vendor jika nanti kamu memakai library luar
+vendor/
+
+# Mengabaikan file sampah bawaan OS atau code editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
