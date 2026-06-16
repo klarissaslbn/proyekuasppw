@@ -1,4 +1,7 @@
 <?php
+// Mulai session di bagian paling atas untuk mengamankan notifikasi
+session_start();
+
 // 1. Panggil file jembatan koneksi database
 include '../config.php';
 
@@ -11,10 +14,8 @@ if (isset($_POST['submit_tugas'])) {
     $query = "INSERT INTO todos (title, priority, due_date, status) VALUES ('$title', '$priority', '$due_date', 'Belum')";
     
     if (mysqli_query($conn, $query)) {
-        echo "<script>
-            alert('Yess! Tugas barumu berhasil disimpan ke database Uneeds ✨');
-            window.location.href = 'todo.php';
-        </script>";
+        $_SESSION['sukses_tambah_todo'] = true;
+        header("Location: todo.php");
         exit();
     } else {
         echo "<script>alert('Aduh, gagal menyimpan tugas baru!');</script>";
@@ -28,10 +29,8 @@ if (isset($_POST['check_selesai']) && isset($_POST['todo_id'])) {
     $query_update = "UPDATE todos SET status = 'Selesai' WHERE id = '$todo_id'";
     
     if (mysqli_query($conn, $query_update)) {
-        echo "<script>
-            alert('Hebat! Tugas telah diselesaikan ✨');
-            window.location.href = 'todo.php';
-        </script>";
+        $_SESSION['sukses_selesai_todo'] = true;
+        header("Location: todo.php");
         exit();
     }
 }
@@ -60,19 +59,23 @@ $tampil_tugas = mysqli_query($conn, $query_tampil);
 <?php include '../components/header.php'; ?>
 <?php include '../components/navbar.php'; ?>
 
+<!-- Menandai Menu To Do List Sedang Aktif di Navbar -->
 <script>document.getElementById('nav-todo').classList.add('active');</script>
 
 <div class="container mb-5">
+    <!-- BARIS KEPALA: Judul Halaman & Tombol Tambah Tugas -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: var(--uneeds-text-green);">To Do List</h2>
             <small class="uneeds-date">Senin, 15 Juni 2026</small>
         </div>
+        <!-- Tombol Pemicu Pop-up Modal -->
         <button class="btn btn-uneeds shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambah">
             <i class="fa-solid fa-plus me-1"></i> Tugas baru
         </button>
     </div>
 
+    <!-- TIGA KOTAK STATISTIK DINAMIS (Otomatis Berubah Sesuai Database) -->
     <div class="row g-3 mb-4">
         <div class="col-4">
             <div class="card p-3 stat-card text-center shadow-sm">
@@ -94,6 +97,7 @@ $tampil_tugas = mysqli_query($conn, $query_tampil);
         </div>
     </div>
 
+    <!-- DAFTAR TUGAS AKTIF DARI DATABASE -->
     <div class="card p-4 content-card shadow-sm mb-4">
         <h6 class="fw-bold mb-3" style="color: var(--uneeds-text-green);">Daftar Tugas Aktif</h6>
         <div class="d-flex flex-column gap-2">
@@ -108,6 +112,7 @@ $tampil_tugas = mysqli_query($conn, $query_tampil);
                         $badge_color = 'bg-warning-subtle text-warning';
                     }
             ?>
+                    <!-- Form Mini untuk Kirim Data saat Checkbox diklik -->
                     <form action="" method="POST" id="form_check_<?= $row['id']; ?>">
                         <input type="hidden" name="todo_id" value="<?= $row['id']; ?>">
                         
@@ -134,6 +139,7 @@ $tampil_tugas = mysqli_query($conn, $query_tampil);
     </div>
 </div>
 
+<!-- MODAL POP-UP FORM: TAMBAH TUGAS BARU -->
 <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -177,3 +183,30 @@ $tampil_tugas = mysqli_query($conn, $query_tampil);
 </div>
 
 <?php include '../components/footer.php'; ?>
+
+<!-- LOGIKA PEMICU SWEETALERT2 BERBASIS SESSION -->
+<?php if (isset($_SESSION['sukses_tambah_todo'])): ?>
+    <script>
+        Swal.fire({
+            title: 'Yess! ✨',
+            text: 'Tugas barumu berhasil disimpan ke database Uneeds',
+            icon: 'success',
+            confirmButtonColor: '#2e7d32',
+            confirmButtonText: 'Oke'
+        });
+    </script>
+    <?php unset($_SESSION['sukses_tambah_todo']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['sukses_selesai_todo'])): ?>
+    <script>
+        Swal.fire({
+            title: 'Hebat! ✨',
+            text: 'Tugas telah diselesaikan',
+            icon: 'success',
+            confirmButtonColor: '#2e7d32',
+            confirmButtonText: 'Mantap'
+        });
+    </script>
+    <?php unset($_SESSION['sukses_selesai_todo']); ?>
+<?php endif; ?>
