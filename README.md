@@ -35,10 +35,8 @@ Uneeds adalah aplikasi berbasis web yang dirancang khusus untuk membantu individ
 
 3. **Konfigurasi Koneksi:**
    Pastikan file `config.php` Anda sudah mengarah ke database yang benar:
-```php
-   $conn = mysqli_connect("localhost", "root", "", "proyekuasppw");
 
-4. Jalankan Aplikasi:
+4. **Jalankan Aplikasi:**
     Buka browser kesayangan Anda dan akses URL berikut:
     http://localhost/proyekuasppw/pages/login.php
 
@@ -59,4 +57,7 @@ Uneeds adalah aplikasi berbasis web yang dirancang khusus untuk membantu individ
 
 ### 5. Tampilan Responsif (Mobile Device)
 ![Tampilan Mobile](assets/img/screenshot-mobile.png)
+
+```php
+   $conn = mysqli_connect("localhost", "root", "", "proyekuasppw");
 
