@@ -2,8 +2,28 @@
 // Mulai session untuk mengamankan pop-up agar tidak muncul terus-menerus
 session_start();
 
+// 2. KUNCI HALAMAN: Jika tidak ada session login, usir pengunjung ke halaman login
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // 1. Hubungkan ke database lewat file jembatan
 include '../config.php';
+
+// SETTING TANGGAL & BULAN OTOMATIS INDONESIA
+date_default_timezone_set('Asia/Jakarta');
+
+$hari_id = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
+$bulan_id = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+$hari_eng  = date('l');
+$hari_ini  = $hari_id[$hari_eng];
+$tanggal   = date('j');
+$bulan_num = date('n');
+$bulan_ini = $bulan_id[$bulan_num];
+$tahun     = date('Y');
+
 
 // 2. FUNGSI CREATE: Proses Tambah Kebiasaan Baru
 if (isset($_POST['submit_habit'])) {
@@ -30,6 +50,21 @@ if (isset($_POST['check_habit_selesai']) && isset($_POST['habit_id'])) {
         $_SESSION['sukses_checklist'] = true;
         header("Location: habit.php");
         exit();
+    }
+}
+
+// 💡 FUNGSI DELETE: Proses Hapus Habit Berdasarkan ID
+if (isset($_GET['hapus_id'])) {
+    $hapus_id = mysqli_real_escape_string($conn, $_GET['hapus_id']);
+    
+    $query_hapus = "DELETE FROM habits WHERE id = '$hapus_id'";
+    
+    if (mysqli_query($conn, $query_hapus)) {
+        $_SESSION['sukses_hapus'] = true;
+        header("Location: habit.php");
+        exit();
+    } else {
+        echo "<script>alert('Gagal menghapus habit.');</script>";
     }
 }
 
@@ -65,33 +100,31 @@ if ($total_habit > 0) {
 
 <script>document.getElementById('nav-habit').classList.add('active');</script>
 
-<div class="container mb-5">
-    <!-- BARIS KEPALA -->
+<div class="container pt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: var(--uneeds-text-green);">Habit Tracker</h2>
-            <small class="uneeds-date">Juni 2026</small>
+            <small class="uneeds-date fw-semibold" style="color: #006F39;"><?= $bulan_ini . ' ' . $tahun; ?></small>
         </div>
         <button class="btn btn-uneeds shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahHabit">
             <i class="fa-solid fa-plus me-1"></i> Habit baru
         </button>
     </div>
 
-    <!-- TIGA KOTAK STATISTIK DINAMIS -->
     <div class="row g-3 mb-4">
-        <div class="col-4">
+        <div class="col-md-4 col-12">
             <div class="card p-3 stat-card text-center shadow-sm">
                 <h3 class="fw-bold mb-1"><?= $total_habit; ?></h3>
                 <small class="text-muted">Habit aktif</small>
             </div>
         </div>
-        <div class="col-4">
+        <div class="col-md-4 col-12">
             <div class="card p-3 stat-card success-variant text-center shadow-sm">
                 <h3 class="fw-bold mb-1"><?= $selesai_hari_ini; ?></h3>
                 <small class="text-muted">Selesai hari ini</small>
             </div>
         </div>
-        <div class="col-4">
+        <div class="col-md-4 col-12">
             <div class="card p-3 stat-card pink-variant text-center shadow-sm">
                 <h3 class="fw-bold mb-1"><?= $streak_terbaik; ?></h3>
                 <small class="text-muted">Streak terbaik</small>
@@ -99,7 +132,6 @@ if ($total_habit > 0) {
         </div>
     </div>
 
-    <!-- LIST CHECK-IN HARI INI DARI DATABASE -->
     <div class="card p-4 content-card shadow-sm mb-4">
         <h6 class="fw-bold mb-3" style="color: var(--uneeds-text-green);">Check-in hari ini</h6>
         <div class="d-flex flex-column gap-3">
@@ -111,20 +143,27 @@ if ($total_habit > 0) {
                     $text_class = ($row['status'] == 'Selesai') ? 'text-muted text-decoration-line-through' : '';
                     $badge_style = ($row['status'] == 'Selesai') ? 'background-color: #e8f5e9; color: var(--uneeds-text-green);' : 'background-color: #f5f5f5; color: #757575;';
             ?>
-                    <form action="" method="POST">
-                        <input type="hidden" name="habit_id" value="<?= $row['id']; ?>">
-                        <div class="p-2 rounded d-flex justify-content-between align-items-center" style="background-color: #fafafa;">
+                    <div class="p-2 rounded d-flex justify-content-between align-items-center" style="background-color: #fafafa;">
+                        <form action="" method="POST" class="m-0 flex-grow-1">
+                            <input type="hidden" name="habit_id" value="<?= $row['id']; ?>">
                             <div class="form-check m-0 d-flex align-items-center">
                                 <input class="form-check-input me-3" type="checkbox" name="check_habit_selesai" id="habit_<?= $row['id']; ?>" style="width: 24px; height: 24px;" onchange="this.form.submit()" <?= $is_checked; ?>>
                                 <label class="form-check-label fw-semibold <?= $text_class; ?>" for="habit_<?= $row['id']; ?>">
                                     <?= htmlspecialchars($row['habit_name']); ?>
                                 </label>
                             </div>
+                        </form>
+                        
+                        <div class="d-flex align-items-center gap-2">
                             <span class="badge rounded-pill px-3 py-2" style="<?= $badge_style; ?> font-size: 0.8rem;">
                                 <?= $row['streak_count']; ?> hari berturut
                             </span>
+                            
+                            <button type="button" class="btn btn-sm btn-link text-danger border-0 shadow-none p-1" onclick="konfirmasiHapus(<?= $row['id']; ?>)">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </div>
-                    </form>
+                    </div>
             <?php 
                 } 
             } else { 
@@ -135,7 +174,6 @@ if ($total_habit > 0) {
         </div>
     </div>
 
-    <!-- KOMPONEN GRAFIK SEMI-DINAMIS -->
     <div class="card p-4 content-card shadow-sm">
         <h6 class="fw-bold mb-4" style="color: var(--uneeds-text-green);">Konsistensi minggu ini</h6>
         <div class="d-flex justify-content-between align-items-end px-2 pt-3" style="height: 160px; border-bottom: 2px solid #eeeeee;">
@@ -155,7 +193,6 @@ if ($total_habit > 0) {
     </div>
 </div>
 
-<!-- MODAL FORM POP-UP -->
 <div class="modal fade" id="modalTambahHabit" tabindex="-1" aria-labelledby="modalTambahHabitLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -183,29 +220,43 @@ if ($total_habit > 0) {
 
 <?php include '../components/footer.php'; ?>
 
-<!-- LOGIKA PEMICU SWEETALERT2 BERBASIS SESSION -->
+<script>
+function konfirmasiHapus(id) {
+    Swal.fire({
+        title: 'Apakah kamu yakin? 😮',
+        text: "Habit yang dihapus tidak bisa dikembalikan beserta streak-nya!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d32f2f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Jika dikonfirmasi, lempar variabel hapus_id ke URL halaman ini
+            window.location.href = 'habit.php?hapus_id=' + id;
+        }
+    })
+}
+</script>
+
 <?php if (isset($_SESSION['sukses_tambah'])): ?>
     <script>
-        Swal.fire({
-            title: 'Semangat Baru! ✨',
-            text: 'Habit barumu berhasil ditambahkan',
-            icon: 'success',
-            confirmButtonColor: '#2e7d32',
-            confirmButtonText: 'Oke'
-        });
+        Swal.fire({ title: 'Semangat Baru! ✨', text: 'Habit barumu berhasil ditambahkan', icon: 'success', confirmButtonColor: '#2e7d32', confirmButtonText: 'Oke' });
     </script>
     <?php unset($_SESSION['sukses_tambah']); ?>
 <?php endif; ?>
 
 <?php if (isset($_SESSION['sukses_checklist'])): ?>
     <script>
-        Swal.fire({
-            title: 'Luar Biasa! 🌸',
-            text: 'Satu investasi kebaikan untuk dirimu hari ini',
-            icon: 'success',
-            confirmButtonColor: '#2e7d32',
-            confirmButtonText: 'Lanjutkan'
-        });
+        Swal.fire({ title: 'Luar Biasa! 🌸', text: 'Satu investasi kebaikan untuk dirimu hari ini', icon: 'success', confirmButtonColor: '#2e7d32', confirmButtonText: 'Lanjutkan' });
     </script>
     <?php unset($_SESSION['sukses_checklist']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['sukses_hapus'])): ?>
+    <script>
+        Swal.fire({ title: 'Berhasil Dihapus! 🗑️', text: 'Satu data kebiasaan telah dibersihkan dari sistem', icon: 'success', confirmButtonColor: '#2e7d32', confirmButtonText: 'Oke' });
+    </script>
+    <?php unset($_SESSION['sukses_hapus']); ?>
 <?php endif; ?>

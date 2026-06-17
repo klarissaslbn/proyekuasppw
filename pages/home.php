@@ -1,5 +1,10 @@
 <?php
 session_start();
+// 2. KUNCI HALAMAN: Jika tidak ada session login, usir pengunjung ke halaman login
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit();
+}
 include '../config.php'; 
 
 // 1. QUERY DATA STATISTIK
@@ -48,10 +53,13 @@ if ($total_target_hari_ini > 0) {
 
 <div class="container mb-5">
     <!-- WELCOME BANNER CAKEP -->
-    <div class="p-4 rounded-4 mb-4 text-white shadow-sm" style="background: linear-gradient(135deg, var(--uneeds-text-green), #006F39);">
-        <h4 class="fw-bold mb-1">Selamat Datang di Uneeds, Klarissa! ✨</h4>
-        <p class="mb-0 small opacity-75">Mari pantau dan kelola seluruh produktivitas kuliahmu hari ini dalam satu dashboard terintegrasi.</p>
-    </div>
+    <!-- 💡 Tambahkan class mt-4 di bawah ini agar memberikan jarak atas yang pas -->
+        <div class="p-4 rounded-4 mb-4 mt-4 text-white shadow-sm" style="background: linear-gradient(135deg, var(--uneeds-text-green), #006F39);">
+             <h4 class="fw-bold mb-1">Selamat Datang di Uneeds, <?= isset($_SESSION['nama_user']) ? $_SESSION['nama_user'] : 'User'; ?>! </h4>
+             <p class="mb-0 small opacity-75">Mari pantau dan kelola seluruh produktivitas kuliahmu hari ini dalam satu dashboard.</p>
+        </div>
+
+    
 
     <!-- SEKSI 1: RANGKUMAN AKTIVITAS -->
     <h5 class="fw-bold mb-3" style="color: var(--uneeds-text-green);">Rangkuman Aktivitas</h5>
@@ -65,7 +73,7 @@ if ($total_target_hari_ini > 0) {
                         <i class="fa-solid fa-list-check text-muted"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-1">Tugas Belum Selesai</h6>
-                    <p class="text-muted small mb-3">Ada beberapa target tugas kuliah yang menanti tindakanmu.</p>
+                    <p class="text-muted small mb-3">Ada beberapa target tugas yang menantimu.</p>
                 </div>
                 <div class="d-flex align-items-baseline">
                     <h2 class="fw-bold m-0 me-2"><?= $sisa_tugas; ?></h2>
@@ -83,7 +91,7 @@ if ($total_target_hari_ini > 0) {
                         <i class="fa-solid fa-arrows-spin text-muted"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-1">Progress Kebiasaan</h6>
-                    <p class="text-muted small mb-3">Konsistensi adalah kunci keberhasilan seorang software engineer.</p>
+                    <p class="text-muted small mb-3">Konsistensi adalah kunci keberhasilan.</p>
                 </div>
                 <div class="d-flex align-items-baseline">
                     <h2 class="fw-bold m-0 me-2"><?= $selesai_habit; ?><span class="text-secondary" style="font-size: 1.2rem;">/<?= $total_habit; ?></span></h2>

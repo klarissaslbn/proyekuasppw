@@ -2,6 +2,12 @@
 // Mulai session di bagian paling atas untuk mengamankan notifikasi SweetAlert2
 session_start();
 
+// 2. KUNCI HALAMAN: Jika tidak ada session login, usir pengunjung ke halaman login
+if (!isset($_SESSION['login'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // 1. Hubungkan ke database lewat file jembatan
 include '../config.php';
 
@@ -32,7 +38,7 @@ $tampil_evaluation = mysqli_query($conn, $query_tampil);
 
 <script>document.getElementById('nav-evaluation').classList.add('active');</script>
 
-<div class="container mb-5">
+<div class="container pt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: var(--uneeds-text-green);">Evaluation</h2>
